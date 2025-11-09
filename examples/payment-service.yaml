@@ -1,0 +1,143 @@
+asyncapi: 3.0.0
+info:
+  title: payment-service Event API
+  version: 1.0.0
+  description: Asynchronous event API for payment-service. This specification was
+    auto-generated from code analysis.
+  x-generated:
+    timestamp: '2025-10-28T20:55:03.025152Z'
+    eventCount: 2
+    repositories:
+    - github.com/yourorg/payment-service
+servers:
+  kafka:
+    host: '{environment}.example.com'
+    protocol: kafka
+    description: KAFKA message broker
+    variables:
+      environment:
+        default: dev
+        enum:
+        - dev
+        - staging
+        - prod
+    bindings:
+      kafka:
+        schemaRegistryUrl: https://schema-registry.example.com
+channels:
+  payment_processed:
+    address: payment.processed
+    description: 'Channel: payment.processed'
+    messages:
+      payment_processed_message_0:
+        $ref: '#/components/messages/payment_processed_message_0'
+    bindings:
+      kafka:
+        topic: payment.processed
+        partitions: 3
+        replicas: 2
+  payment_failed:
+    address: payment.failed
+    description: 'Channel: payment.failed'
+    messages:
+      payment_failed_message_0:
+        $ref: '#/components/messages/payment_failed_message_0'
+    bindings:
+      kafka:
+        topic: payment.failed
+        partitions: 3
+        replicas: 2
+operations:
+  send_payment_processed:
+    action: send
+    channel:
+      $ref: '#/channels/payment_processed'
+    description: Send messages to payment.processed
+    messages:
+    - $ref: '#/channels/payment_processed/messages/payment_processed_message_0'
+  send_payment_failed:
+    action: send
+    channel:
+      $ref: '#/channels/payment_failed'
+    description: Send messages to payment.failed
+    messages:
+    - $ref: '#/channels/payment_failed/messages/payment_failed_message_0'
+components:
+  messages:
+    payment_processed_message_0:
+      name: Unknown
+      title: Unknown Event
+      summary: Message published to payment.processed
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/payment_processed_message_0_payload'
+      x-source:
+        repository: github.com/yourorg/payment-service
+        filePath: src/main/java/com/company/payment/EventPublisher.java
+        lineNumber: 45
+    payment_failed_message_0:
+      name: Unknown
+      title: Unknown Event
+      summary: Message published to payment.failed
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/payment_failed_message_0_payload'
+      x-source:
+        repository: github.com/yourorg/payment-service
+        filePath: src/main/java/com/company/payment/EventPublisher.java
+        lineNumber: 67
+  schemas:
+    payment_processed_message_0_payload:
+      type: object
+      title: Unknown
+      description: Schema for Unknown (to be enriched with actual fields)
+      properties:
+        eventId:
+          type: string
+          description: Unique event identifier
+          format: uuid
+        timestamp:
+          type: string
+          description: Event timestamp
+          format: date-time
+        eventType:
+          type: string
+          description: Type of event
+          const: Unknown
+        payload:
+          type: object
+          description: Event-specific payload (schema to be defined)
+          additionalProperties: true
+      required:
+      - eventId
+      - timestamp
+      - eventType
+      x-note: This is a template schema. Actual schema should be enriched with real
+        payload fields.
+    payment_failed_message_0_payload:
+      type: object
+      title: Unknown
+      description: Schema for Unknown (to be enriched with actual fields)
+      properties:
+        eventId:
+          type: string
+          description: Unique event identifier
+          format: uuid
+        timestamp:
+          type: string
+          description: Event timestamp
+          format: date-time
+        eventType:
+          type: string
+          description: Type of event
+          const: Unknown
+        payload:
+          type: object
+          description: Event-specific payload (schema to be defined)
+          additionalProperties: true
+      required:
+      - eventId
+      - timestamp
+      - eventType
+      x-note: This is a template schema. Actual schema should be enriched with real
+        payload fields.

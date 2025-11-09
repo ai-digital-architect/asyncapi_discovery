@@ -1,0 +1,31 @@
+{
+  "sourcegraph": {
+    "endpoint": "https://sourcegraph.yourcompany.com",
+    "token": "YOUR_SOURCEGRAPH_TOKEN_HERE",
+    "comment": "Get token from: https://sourcegraph.yourcompany.com/user/settings/tokens"
+  },
+  "repositories": {
+    "include_patterns": [
+      "github.com/yourorg/.*"
+    ],
+    "exclude_patterns": [
+      ".*test.*",
+      ".*demo.*",
+      ".*archived.*"
+    ]
+  },
+  "output": {
+    "directory": "./asyncapi_catalog",
+    "format": "yaml"
+  },
+  "detection": {
+    "max_concurrent_queries": 10,
+    "timeout_seconds": 300,
+    "min_confidence": 0.7
+  },
+  "catalog": {
+    "enable_versioning": true,
+    "generate_html": false,
+    "validate_specs": true
+  }
+}

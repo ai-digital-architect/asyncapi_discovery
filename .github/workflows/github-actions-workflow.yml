@@ -1,0 +1,129 @@
+name: AsyncAPI Catalog Discovery
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+  push:
+    branches:
+      - main
+    paths:
+      - '**/pom.xml'
+      - '**/build.gradle'
+      - '**/*Producer*.java'
+      - '**/*Publisher*.java'
+
+jobs:
+  discover-events:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Configure SourceGraph
+        run: |
+          cat > config.json << EOF
+          {
+            "sourcegraph": {
+              "endpoint": "${{ secrets.SOURCEGRAPH_ENDPOINT }}",
+              "token": "${{ secrets.SOURCEGRAPH_TOKEN }}"
+            },
+            "repositories": {
+              "include_patterns": ["github.com/${{ github.repository_owner }}/.*"],
+              "exclude_patterns": [".*test.*", ".*demo.*"]
+            },
+            "output": {
+              "directory": "./asyncapi_catalog",
+              "format": "yaml"
+            },
+            "detection": {
+              "max_concurrent_queries": 5,
+              "timeout_seconds": 300
+            }
+          }
+          EOF
+      
+      - name: Run discovery
+        id: discovery
+        run: |
+          python main.py
+          echo "catalog_dir=asyncapi_catalog" >> $GITHUB_OUTPUT
+      
+      - name: Validate AsyncAPI specs
+        run: |
+          npm install -g @asyncapi/cli
+          for spec in asyncapi_catalog/specs/*.yaml; do
+            echo "Validating $spec"
+            asyncapi validate "$spec" || echo "Warning: Validation failed for $spec"
+          done
+      
+      - name: Generate HTML documentation
+        run: |
+          for spec in asyncapi_catalog/specs/*.yaml; do
+            service=$(basename "$spec" .yaml)
+            asyncapi generate html "$spec" -o "asyncapi_catalog/docs/$service" --force-write
+          done
+      
+      - name: Upload catalog artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: asyncapi-catalog
+          path: asyncapi_catalog/
+          retention-days: 30
+      
+      - name: Commit and push catalog
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "AsyncAPI Bot"
+          git config user.email "asyncapi-bot@company.com"
+          git add asyncapi_catalog/
+          git diff --quiet && git diff --staged --quiet || (
+            git commit -m "chore: Update AsyncAPI catalog [skip ci]" &&
+            git push
+          )
+      
+      - name: Create catalog summary
+        id: summary
+        run: |
+          echo "## AsyncAPI Discovery Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat asyncapi_catalog/SUMMARY.txt >> $GITHUB_STEP_SUMMARY
+      
+      - name: Notify Slack
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "AsyncAPI catalog updated successfully",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*AsyncAPI Catalog Discovery Complete* :white_check_mark:\n\nView the updated catalog: https://asyncapi-catalog.company.com"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./asyncapi_catalog/docs
+          destination_dir: catalog
