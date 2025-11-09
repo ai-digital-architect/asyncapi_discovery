@@ -1,0 +1,35 @@
+{
+  "sourcegraph": {
+    "url": "https://sourcegraph.com",
+    "token": "",
+    "timeout": 30
+  },
+  "event_detection": {
+    "brokers": [
+      "kafka",
+      "rabbitmq",
+      "aws",
+      "pubsub",
+      "azure",
+      "generic"
+    ],
+    "exclude_patterns": [
+      "test",
+      "mock",
+      "example"
+    ],
+    "include_extensions": [
+      ".py",
+      ".java",
+      ".js",
+      ".ts",
+      ".go",
+      ".cs"
+    ]
+  },
+  "output": {
+    "directory": "asyncapi_catalog",
+    "format": "json",
+    "generate_yaml": true
+  }
+}

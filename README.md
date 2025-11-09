@@ -1,162 +1,156 @@
 # AsyncAPI Discovery
 
-[![CI](https://github.com/ai-digital-architect/asyncapi_discovery/workflows/CI/badge.svg)](https://github.com/ai-digital-architect/asyncapi_discovery/actions)
-[![codecov](https://codecov.io/gh/ai-digital-architect/asyncapi_discovery/branch/main/graph/badge.svg)](https://codecov.io/gh/ai-digital-architect/asyncapi_discovery)
-[![PyPI version](https://badge.fury.io/py/asyncapi-discovery.svg)](https://badge.fury.io/py/asyncapi-discovery)
-[![Python Versions](https://img.shields.io/pypi/pyversions/asyncapi-discovery.svg)](https://pypi.org/project/asyncapi-discovery/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+> Automatically discover event producers in your codebase and generate AsyncAPI specifications
 
-Scan repositories for event producers regardless of the broker and create AsyncAPI catalog specifications for those.
+## Overview
+
+AsyncAPI Discovery is a powerful tool that scans code repositories to identify event producers across various messaging systems and brokers, automatically generating AsyncAPI catalog specifications. It helps document your event-driven architecture regardless of the messaging technology used.
 
 ## Features
 
-- 🔍 **Automatic Discovery**: Scans repositories to find event producers in multiple languages
-- 📋 **AsyncAPI Generation**: Creates AsyncAPI 2.6.0 specifications automatically
-- 🚀 **Broker Agnostic**: Works with any message broker (Kafka, RabbitMQ, AMQP, etc.)
-- 🐍 **Multi-Language Support**: Supports Python, JavaScript, TypeScript, Java, and Go
-- 🛠️ **CLI Tool**: Easy-to-use command-line interface
-- 📦 **Python API**: Programmatic access for integration into your tools
+- 🔍 **Multi-Broker Support**: Detects event producers across:
+  - Apache Kafka
+  - RabbitMQ
+  - AWS SNS/SQS
+  - Google Pub/Sub
+  - Azure Service Bus
+  - Generic event emitters
 
-## Installation
-
-### From PyPI (coming soon)
-
-```bash
-pip install asyncapi-discovery
-```
-
-### From Source
-
-```bash
-git clone https://github.com/ai-digital-architect/asyncapi_discovery.git
-cd asyncapi_discovery
-pip install -e .
-```
+- 📊 **AsyncAPI Generation**: Creates AsyncAPI 2.6.0 compliant specifications
+- 🔌 **Sourcegraph Integration**: Leverages Sourcegraph for powerful code search
+- 📚 **Catalog Management**: Organizes specifications in a searchable catalog
+- 🎯 **Pattern Recognition**: Uses regex patterns to identify event patterns
+- 🌐 **Multi-Language**: Supports Python, Java, JavaScript, TypeScript, Go, C#
 
 ## Quick Start
 
-### Command Line Usage
+### Prerequisites
 
-Scan a repository and generate an AsyncAPI specification:
+- Python 3.8+
+- Sourcegraph instance access (cloud or self-hosted)
+- Sourcegraph API token
 
-```bash
-asyncapi-discovery /path/to/your/repository -o asyncapi.yaml
-```
-
-Discover producers without generating a specification:
-
-```bash
-asyncapi-discovery /path/to/your/repository --discover-only
-```
-
-Enable verbose output:
-
-```bash
-asyncapi-discovery /path/to/your/repository -v -o asyncapi.yaml
-```
-
-### Python API Usage
-
-```python
-from asyncapi_discovery import AsyncAPIDiscovery
-
-# Initialize discovery for a repository
-discovery = AsyncAPIDiscovery('/path/to/your/repository')
-
-# Discover event producers
-producers = discovery.discover()
-print(f"Found {producers['statistics']['producers_found']} producers")
-
-# Generate AsyncAPI specification
-spec = discovery.generate_spec(producers)
-print(spec)
-
-# Or run the complete workflow
-spec = discovery.run('asyncapi.yaml')
-```
-
-## How It Works
-
-AsyncAPI Discovery scans your repository for common event producer patterns in your code:
-
-1. **Scanning**: Analyzes source files for event publishing patterns
-2. **Detection**: Identifies calls to `publish()`, `send()`, `emit()`, `produce()` and similar methods
-3. **Extraction**: Extracts event names and metadata
-4. **Generation**: Creates a standardized AsyncAPI specification
-
-## Supported Languages and Patterns
-
-- **Python**: `publish()`, `send()`, `emit()`, `produce()`
-- **JavaScript/TypeScript**: `publish()`, `send()`, `emit()`, `produce()`
-- **Java**: `publish()`, `send()`, `produce()`
-- **Go**: `Publish()`, `Send()`, `Produce()`
-
-## Development
-
-### Setup Development Environment
+### Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/ai-digital-architect/asyncapi_discovery.git
 cd asyncapi_discovery
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install dependencies (when available)
+pip install -r requirements.txt
 
-# Install development dependencies
-pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
+# Configure your Sourcegraph credentials
+cp config.json config.local.json
+# Edit config.local.json with your credentials
 ```
 
-### Running Tests
+### Usage
 
 ```bash
-# Run all tests
-pytest
+# Scan all repositories
+python main.py
 
-# Run with coverage
-pytest --cov=asyncapi_discovery --cov-report=html
+# Scan a specific repository
+python main.py --repository github.com/org/repo-name
 
-# Run specific test file
-pytest tests/test_scanner.py
+# Use custom configuration
+python main.py --config config.local.json
+
+# Run demo
+python demo.py
 ```
 
-### Code Quality
+## Configuration
 
-```bash
-# Lint with ruff
-ruff check src/ tests/
+Create a `config.json` file with your settings:
 
-# Format with black
-black src/ tests/
-
-# Type check with mypy
-mypy src/
+```json
+{
+  "sourcegraph": {
+    "url": "https://sourcegraph.com",
+    "token": "your-api-token",
+    "timeout": 30
+  },
+  "event_detection": {
+    "brokers": ["kafka", "rabbitmq", "aws", "pubsub", "azure", "generic"],
+    "exclude_patterns": ["test", "mock"],
+    "include_extensions": [".py", ".java", ".js", ".ts", ".go", ".cs"]
+  },
+  "output": {
+    "directory": "asyncapi_catalog",
+    "format": "json",
+    "generate_yaml": true
+  }
+}
 ```
+
+## Project Structure
+
+```
+asyncapi_discovery/
+├── .github/              # GitHub configuration
+│   ├── prompts/         # AI prompts
+│   ├── chatmodes/       # Chat mode configurations
+│   ├── instructions/    # Instructions and guides
+│   └── workflows/       # GitHub Actions workflows
+├── .specify/            # Specify configuration
+├── main.py              # Main entry point
+├── sourcegraph_client.py # Sourcegraph API client
+├── event_detector.py    # Event detection logic
+├── catalog_manager.py   # AsyncAPI catalog management
+├── demo.py              # Demonstration script
+├── config.json          # Configuration file
+├── README.md            # This file
+└── IMPLEMENTATION_GUIDE.md # Detailed implementation guide
+```
+
+## How It Works
+
+1. **Connect**: Connects to your Sourcegraph instance
+2. **Scan**: Searches for event producer patterns in code
+3. **Extract**: Identifies event names, brokers, and metadata
+4. **Generate**: Creates AsyncAPI specifications
+5. **Catalog**: Organizes specifications in a catalog
+
+## Output
+
+The tool generates:
+
+- Individual AsyncAPI specifications (JSON/YAML) for each repository
+- A catalog index with metadata about all specifications
+- Organized directory structure for easy navigation
+
+Example output:
+```
+asyncapi_catalog/
+├── catalog_index.json
+├── github.com_org_service1.json
+├── github.com_org_service1.yaml
+├── github.com_org_service2.json
+└── github.com_org_service2.yaml
+```
+
+## Documentation
+
+For detailed implementation information, see [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+See LICENSE file for details.
 
-## Roadmap
+## Support
 
-- [ ] Support for more message brokers (SQS, Google Pub/Sub, Azure Service Bus)
-- [ ] Enhanced pattern detection for framework-specific patterns
-- [ ] Support for AsyncAPI 3.0
-- [ ] Integration with CI/CD pipelines
-- [ ] Web UI for visualization
-- [ ] Support for consumer detection
+For questions or issues:
+- Open an issue on GitHub
+- Check the [Implementation Guide](IMPLEMENTATION_GUIDE.md)
 
-## Links
+## Acknowledgments
 
-- [Documentation](https://github.com/ai-digital-architect/asyncapi_discovery)
-- [Issue Tracker](https://github.com/ai-digital-architect/asyncapi_discovery/issues)
-- [PyPI Package](https://pypi.org/project/asyncapi-discovery/)
-- [AsyncAPI Specification](https://www.asyncapi.com/docs/reference/specification/v2.6.0)
+Built with ❤️ using:
+- [AsyncAPI](https://www.asyncapi.com/) specification
+- [Sourcegraph](https://sourcegraph.com/) code search
